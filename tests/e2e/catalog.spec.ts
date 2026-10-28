@@ -102,12 +102,17 @@ test.describe('الواجهة العامة', () => {
 });
 
 test.describe('الحماية', () => {
-  for (const path of ['/dashboard', '/dashboard/products', '/dashboard/settings', '/dashboard/users', '/dashboard/import-export', '/dashboard/integrations', '/dashboard/orders', '/account']) {
+  for (const path of ['/dashboard', '/dashboard/products', '/dashboard/settings', '/dashboard/users', '/dashboard/import-export', '/dashboard/integrations', '/dashboard/orders', '/dashboard/audit', '/account']) {
     test(`${path} بلا جلسة يحوّل إلى الدخول`, async ({ page }) => {
       await page.goto(path);
       await expect(page).toHaveURL(/\/login/);
     });
   }
+
+  test('تصدير سجل التعديلات بلا جلسة مرفوض', async ({ request }) => {
+    const res = await request.get('/api/dashboard/audit-export', { maxRedirects: 0 });
+    expect([301, 302, 303, 307, 308, 401, 403]).toContain(res.status());
+  });
 
   test('تصدير المنتجات بلا جلسة مرفوض', async ({ request }) => {
     const res = await request.get('/api/dashboard/products-export', { maxRedirects: 0 });

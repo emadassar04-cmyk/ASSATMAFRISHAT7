@@ -1,9 +1,11 @@
 import Link from 'next/link';
-import { requireStaff } from '@/lib/auth';
+import { redirect } from 'next/navigation';
+import { requireRole } from '@/lib/auth';
 import { PageHeader } from './_ui';
 
 export default async function DashboardHome() {
-  const { supabase, profile } = await requireStaff();
+  const { supabase, profile } = await requireRole(['moderator', 'admin', 'auditor']);
+  if (profile.role === 'auditor') redirect('/dashboard/audit');
   const count = async (t: string) => (await supabase.from(t).select('*', { count: 'exact', head: true })).count ?? 0;
   const [products, categories, offers, lowStock] = await Promise.all([
     count('products'), count('categories'), count('offers'),
