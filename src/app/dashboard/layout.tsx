@@ -15,6 +15,7 @@ const STAFF_LINKS = [
 const ADMIN_LINKS = [
   { href: '/dashboard/branches', label: 'الفروع والدوام' },
   { href: '/dashboard/settings', label: 'الإعدادات' },
+  { href: '/dashboard/integrations', label: 'الربط (واتساب/فيسبوك)' },
   { href: '/dashboard/users', label: 'المستخدمون' },
 ];
 

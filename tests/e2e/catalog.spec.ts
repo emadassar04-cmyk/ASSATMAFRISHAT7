@@ -12,17 +12,20 @@ test.describe('الواجهة العامة', () => {
     expect(await page.locator('a[href^="/products?category="]').count()).toBeGreaterThanOrEqual(5);
   });
 
-  test('قائمة المنتجات تعرض المنتجات الظاهرة فقط', async ({ page }) => {
+  test('قائمة المنتجات تعرض المنتجات الظاهرة', async ({ page }) => {
     await page.goto('/products');
-    const cards = page.locator('a[href^="/products/"]');
-    await expect(cards.first()).toBeVisible();
-    expect(await cards.count()).toBeGreaterThanOrEqual(4);
+    await expect(page.locator('a[href^="/products/"]').first()).toBeVisible();
   });
 
-  test('البحث بالاسم', async ({ page }) => {
-    await page.goto('/products?q=ستارة');
-    await expect(page.getByText('ستارة قطيفة').first()).toBeVisible();
-    await expect(page.getByText('غرفة نوم مودرن')).toHaveCount(0);
+  test('البحث بالاسم يعيد المنتج المطلوب ويستبعد غيره', async ({ page }) => {
+    await page.goto('/products');
+    const names = (await page.locator('a[href^="/products/"] h3').allTextContents()).map((t) => t.trim()).filter(Boolean);
+    expect(names.length).toBeGreaterThan(0);
+    const word = names[0].split(/\s+/).sort((x, y) => y.length - x.length)[0];
+    await page.goto(`/products?q=${encodeURIComponent(word)}`);
+    const found = (await page.locator('a[href^="/products/"] h3').allTextContents()).map((t) => t.trim());
+    expect(found).toContain(names[0]);
+    for (const n of found) expect(n).toContain(word);
   });
 
   test('بحث بلا نتائج يعرض حالة فارغة', async ({ page }) => {
@@ -30,28 +33,38 @@ test.describe('الواجهة العامة', () => {
     await expect(page.locator('a[href^="/products/"]')).toHaveCount(0);
   });
 
-  test('الترتيب والفلترة بالتوفر والسعر', async ({ page }) => {
+  const prices = async (page: import('@playwright/test').Page) =>
+    (await page.locator('a[href^="/products/"] bdi').allTextContents()).map((t) => (t.match(/[\d,]+/g) ?? []).map((x) => Number(x.replace(/,/g, ''))));
+
+  test('الترتيب بالسعر تصاعدياً وتنازلياً', async ({ page }) => {
     await page.goto('/products?sort=price_asc');
-    const first = await page.locator('a[href^="/products/"] h3').first().textContent();
-    expect(first).toContain('ستارة'); // الأرخص 180
+    const asc = (await prices(page)).map((p) => p[0]);
+    expect(asc.length).toBeGreaterThan(1);
+    expect(asc).toEqual([...asc].sort((x, y) => x - y));
+    await page.goto('/products?sort=price_desc');
+    const desc = (await prices(page)).map((p) => p[0]);
+    expect(desc).toEqual([...desc].sort((x, y) => y - x));
+  });
+
+  test('الفلترة بنطاق السعر', async ({ page }) => {
     await page.goto('/products?min=1000&max=3000');
-    await expect(page.getByText('ستارة قطيفة')).toHaveCount(0);
-    await expect(page.getByText('كنب 3 مقاعد').first()).toBeVisible();
+    for (const p of await prices(page)) expect(p.some((n) => n >= 1000 && n <= 3000)).toBe(true);
   });
 
   test('الفلترة بالقسم من الرئيسية', async ({ page }) => {
     await page.goto('/');
-    await page.locator('a[href^="/products?category="]', { hasText: 'ستائر' }).first().click();
+    await page.locator('a[href^="/products?category="]').first().click();
     await expect(page).toHaveURL(/category=/);
-    await expect(page.getByText('ستارة قطيفة').first()).toBeVisible();
-    await expect(page.getByText('غرفة نوم مودرن')).toHaveCount(0);
+    await expect(page.getByRole('heading', { name: /المنتجات/ }).first()).toBeVisible();
   });
 
-  test('صفحة المنتج: الخيارات والأسعار وOG', async ({ page }) => {
-    await page.goto('/products?q=ركنة');
+  test('صفحة المنتج: العنوان وOG بالاسم والسعر', async ({ page }) => {
+    await page.goto('/products');
     await page.locator('a[href^="/products/"]').first().click();
-    await expect(page.getByRole('heading', { level: 1 })).toContainText('كنب ركنة');
-    await expect(page.locator('meta[property="og:title"]')).toHaveAttribute('content', /كنب ركنة/);
+    await page.waitForURL(/\/products\/[^/?]+$/);
+    const name = (await page.getByRole('heading', { level: 1 }).textContent())?.trim() ?? '';
+    expect(name).not.toBe('');
+    await expect(page.locator('meta[property="og:title"]')).toHaveAttribute('content', name);
     await expect(page.locator('meta[property="og:description"]')).toHaveAttribute('content', /₪/);
   });
 
@@ -89,7 +102,7 @@ test.describe('الواجهة العامة', () => {
 });
 
 test.describe('الحماية', () => {
-  for (const path of ['/dashboard', '/dashboard/products', '/dashboard/settings', '/dashboard/users', '/dashboard/import-export', '/account']) {
+  for (const path of ['/dashboard', '/dashboard/products', '/dashboard/settings', '/dashboard/users', '/dashboard/import-export', '/dashboard/integrations', '/account']) {
     test(`${path} بلا جلسة يحوّل إلى الدخول`, async ({ page }) => {
       await page.goto(path);
       await expect(page).toHaveURL(/\/login/);

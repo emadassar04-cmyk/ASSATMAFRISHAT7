@@ -4,7 +4,7 @@ const PORT = 3100;
 export default defineConfig({
   testDir: './tests/e2e',
   timeout: 30_000,
-  retries: 1,
+  retries: 0,
   use: { baseURL: `http://localhost:${PORT}`, locale: 'ar' },
   webServer: {
     command: `npx next start -p ${PORT}`,

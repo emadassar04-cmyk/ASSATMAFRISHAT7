@@ -133,6 +133,36 @@ select pg_temp.chk('auditor: لا يكتب في categories', pg_temp.denied($$in
 select pg_temp.chk('auditor: لا يرى الإعدادات الخاصة', (select count(*) from public.settings where key='t.private') = 0);
 reset role;
 
+-- ===== الربط (integrations + Vault) =====
+set local role service_role;
+select pg_temp.chk('service_role: يحفظ سراً', not pg_temp.denied($$select public.set_integration_secret('integration:whatsapp:access_token','OLD-token')$$));
+select public.set_integration_secret('integration:whatsapp:access_token','NEW-token');
+select pg_temp.chk('service_role: التحديث يستبدل القيمة', public.get_integration_secret('integration:whatsapp:access_token') = 'NEW-token');
+select pg_temp.chk('اسم سر غير مسموح يُرفض', pg_temp.denied($$select public.set_integration_secret('evil','x')$$));
+reset role;
+select pg_temp.chk('السر مشفّر في vault.secrets', (select secret <> 'NEW-token' from vault.secrets where name='integration:whatsapp:access_token'));
+select pg_temp.act_anon();
+select pg_temp.chk('anon: لا يستدعي get_integration_secret', pg_temp.denied($$select public.get_integration_secret('integration:whatsapp:access_token')$$));
+select pg_temp.chk('anon: لا يرى integrations', pg_temp.denied($$select 1 from public.integrations$$));
+reset role;
+select pg_temp.act_as('aaaaaaaa-0000-0000-0000-000000000002');
+select pg_temp.chk('moderator: لا يرى integrations', (select count(*) from public.integrations) = 0);
+select pg_temp.chk('moderator: لا يستدعي get_integration_secret', pg_temp.denied($$select public.get_integration_secret('integration:whatsapp:access_token')$$));
+reset role;
+select pg_temp.act_as('aaaaaaaa-0000-0000-0000-000000000003', 'aal1');
+select pg_temp.chk('admin aal1: لا يرى integrations', (select count(*) from public.integrations) = 0);
+reset role;
+select pg_temp.act_as('aaaaaaaa-0000-0000-0000-000000000003', 'aal2');
+select pg_temp.chk('admin aal2: يرى integrations', (select count(*) from public.integrations) >= 2);
+select pg_temp.chk('admin aal2: لا يكتب مباشرة', pg_temp.denied($$update public.integrations set status='connected'$$));
+select pg_temp.chk('admin aal2: لا يستدعي get_integration_secret', pg_temp.denied($$select public.get_integration_secret('integration:whatsapp:access_token')$$));
+select pg_temp.chk('admin aal2: لا يقرأ vault', pg_temp.denied($$select 1 from vault.decrypted_secrets$$));
+reset role;
+set local role service_role;
+select public.delete_integration_secret('integration:whatsapp:access_token');
+select pg_temp.chk('حذف السر', public.get_integration_secret('integration:whatsapp:access_token') is null);
+reset role;
+
 select count(*) filter (where ok) as passed, count(*) filter (where not ok) as failed,
        coalesce(string_agg(name, ' | ') filter (where not ok), '-') as failures from _t;
 rollback;
