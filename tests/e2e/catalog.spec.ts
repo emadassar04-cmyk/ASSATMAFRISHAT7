@@ -102,7 +102,7 @@ test.describe('الواجهة العامة', () => {
 });
 
 test.describe('الحماية', () => {
-  for (const path of ['/dashboard', '/dashboard/products', '/dashboard/settings', '/dashboard/users', '/dashboard/import-export', '/dashboard/integrations', '/account']) {
+  for (const path of ['/dashboard', '/dashboard/products', '/dashboard/settings', '/dashboard/users', '/dashboard/import-export', '/dashboard/integrations', '/dashboard/orders', '/account']) {
     test(`${path} بلا جلسة يحوّل إلى الدخول`, async ({ page }) => {
       await page.goto(path);
       await expect(page).toHaveURL(/\/login/);

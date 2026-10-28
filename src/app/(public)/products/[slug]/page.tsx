@@ -95,7 +95,8 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
           {product.description && <p className="whitespace-pre-line text-sm leading-7 text-muted">{product.description}</p>}
 
           {variants.length ? (
-            <VariantPicker groups={groups} variants={variants} stock={stock} branches={branches} />
+            <VariantPicker groups={groups} variants={variants} stock={stock} branches={branches}
+              productName={product.name} slug={product.slug} image={imgs.data?.[0]?.path ?? null} />
           ) : (
             <p className="text-2xl font-bold text-primary"><bdi>{formatPrice(product.base_price)}</bdi></p>
           )}

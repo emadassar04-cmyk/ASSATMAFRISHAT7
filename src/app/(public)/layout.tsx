@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { getSettings, POLICY_KEYS } from '@/lib/settings';
 import { createPublicClient } from '@/lib/supabase/public';
+import { CartLink } from '@/components/CartLink';
 import { httpUrl, publicUrl, tgLink, waLink } from '@/lib/format';
 import { AccountLink } from '@/components/AccountLink';
 import type { Branch } from '@/types';
@@ -34,6 +35,7 @@ export default async function PublicLayout({ children }: { children: React.React
           </nav>
           <div className="flex items-center gap-2">
             <Link href="/products" aria-label="بحث" className="btn btn-outline btn-sm">🔍</Link>
+            <CartLink />
             <AccountLink />
             <details className="relative md:hidden">
               <summary className="btn btn-outline btn-sm cursor-pointer list-none" aria-label="القائمة">☰</summary>

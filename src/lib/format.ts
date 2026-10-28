@@ -65,3 +65,34 @@ export function tgLink(handle: string | undefined, text?: string): string | null
 export function httpUrl(u: string | undefined): string | null {
   return u && /^https?:\/\//.test(u) ? u : null;
 }
+
+/**
+ * رابط ماسنجر من رابط صفحة فيسبوك (facebook.com/اسم-الصفحة أو profile.php?id=رقم). يعيد null لأي رابط آخر.
+ * ملاحظة: ماسنجر لا يدعم نصاً جاهزاً في الرابط، لذلك يُعرض رقم الطلب للنسخ.
+ */
+export function messengerLink(pageUrl: string | undefined): string | null {
+  const u = httpUrl(pageUrl);
+  if (!u) return null;
+  try {
+    const url = new URL(u);
+    if (!/^(www\.|m\.|web\.)?facebook\.com$/i.test(url.hostname) && url.hostname.toLowerCase() !== 'fb.com') return null;
+    const id = url.searchParams.get('id');
+    if (url.pathname.replace(/\/+$/, '') === '/profile.php' && id && /^\d{5,20}$/.test(id)) return `https://m.me/${id}`;
+    const name = url.pathname.split('/').filter(Boolean)[0];
+    return name && /^[A-Za-z0-9.\-_]{3,}$/.test(name) && name !== 'profile.php' ? `https://m.me/${name}` : null;
+  } catch {
+    return null;
+  }
+}
+
+/** رمز الدولة الافتراضي لأرقام الجوال المحلية (للروابط wa.me)؛ فلسطين */
+export const DEFAULT_COUNTRY_CODE = '970';
+
+/** أرقام دولية بلا + لاستخدامها في wa.me، من رقم محلي (05XXXXXXXX) أو دولي. يعيد null إن لم يكن رقماً صالحاً. */
+export function intlDigits(phone: string | null | undefined, cc = DEFAULT_COUNTRY_CODE): string | null {
+  let d = (phone ?? '').replace(/\D/g, '');
+  if (d.startsWith('00')) d = d.slice(2);
+  else if (d.startsWith('0')) d = cc + d.slice(1);
+  else if (d.length <= 9) d = cc + d;
+  return d.length >= 10 && d.length <= 15 ? d : null;
+}

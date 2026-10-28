@@ -13,6 +13,7 @@ const STAFF_LINKS = [
   { href: '/dashboard/import-export', label: 'استيراد/تصدير' },
 ];
 const ADMIN_LINKS = [
+  { href: '/dashboard/orders', label: 'الطلبات' },
   { href: '/dashboard/branches', label: 'الفروع والدوام' },
   { href: '/dashboard/settings', label: 'الإعدادات' },
   { href: '/dashboard/integrations', label: 'الربط (واتساب/فيسبوك)' },
