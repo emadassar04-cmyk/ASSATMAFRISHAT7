@@ -8,7 +8,7 @@ export const AUDIT_EXPORT_MAX = 5000;
 export const ENTITY_LABEL: Record<string, string> = {
   product: 'منتج', variant: 'خيار منتج', category: 'قسم', offer: 'عرض', setting: 'إعداد', branch: 'فرع',
   payment_method: 'طريقة دفع', delivery_zone: 'منطقة توصيل', user: 'مستخدم', order: 'طلب', payment: 'دفعة',
-  custom_order: 'طلب تفصيل', integration: 'ربط',
+  custom_order: 'طلب تفصيل', integration: 'ربط', bot_message: 'نص البوت', kb_document: 'قاعدة المعرفة',
 };
 export const ACTION_LABEL: Record<string, string> = {
   insert: 'إضافة', update: 'تعديل', delete: 'حذف', status_change: 'تغيير حالة', price_change: 'تغيير سعر', role_change: 'تغيير دور',
