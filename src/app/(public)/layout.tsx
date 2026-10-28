@@ -10,6 +10,7 @@ const NAV = [
   { href: '/products', label: 'المنتجات' },
   { href: '/offers', label: 'العروض' },
   { href: '/branches', label: 'الفروع' },
+  { href: '/custom-order', label: 'طلب تفصيل' },
   { href: '/about', label: 'من نحن' },
 ];
 

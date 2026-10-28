@@ -16,7 +16,7 @@ export async function updateSession(request: NextRequest) {
   });
   const { data } = await supabase.auth.getClaims();
   const path = request.nextUrl.pathname;
-  const protectedArea = path.startsWith('/dashboard') || path.startsWith('/account') || path.startsWith('/orders') || path === '/checkout' || path === '/mfa';
+  const protectedArea = path.startsWith('/dashboard') || path.startsWith('/account') || path.startsWith('/orders') || path === '/checkout' || path === '/custom-order' || path.startsWith('/custom-orders') || path === '/mfa';
   if (protectedArea && !data?.claims) {
     const url = request.nextUrl.clone();
     url.pathname = '/login';

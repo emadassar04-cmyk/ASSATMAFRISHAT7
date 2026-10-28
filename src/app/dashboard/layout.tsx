@@ -10,6 +10,7 @@ const STAFF_LINKS = [
   { href: '/dashboard/products', label: 'المنتجات' },
   { href: '/dashboard/options', label: 'الخصائص' },
   { href: '/dashboard/offers', label: 'العروض' },
+  { href: '/dashboard/custom-orders', label: 'طلبات التفصيل' },
   { href: '/dashboard/import-export', label: 'استيراد/تصدير' },
 ];
 const ADMIN_LINKS = [

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { customerCanCancel, isClosed, nextStatuses, orderErrorMessage, ORDER_STATUS_LABEL, type OrderStatus } from '@/lib/orderStatus';
 import { addLine, cartCount, cartPayload, cartSubtotal, normalizeCart, removeLine, setLineQty, MAX_QTY, type CartLine } from '@/lib/cartCore';
 import { intlDigits, messengerLink } from '@/lib/format';
+import { canRequote, customErrorMessage, customerCanCancelCustom, CUSTOM_STATUS_LABEL, nextCustomStatuses, sniffImageExt } from '@/lib/customOrder';
 
 const V1 = 'dddddddd-0000-0000-0000-000000000001';
 const V2 = 'dddddddd-0000-0000-0000-000000000002';
@@ -85,5 +86,38 @@ describe('أرقام الجوال الدولية لروابط واتساب', () 
   });
   it('يرفض غير الصالح', () => {
     for (const x of ['', 'abc', '123', null, undefined]) expect(intlDigits(x)).toBeNull();
+  });
+});
+
+describe('طلب التفصيل', () => {
+  it('مسار الحالات (مرآة القاعدة)', () => {
+    expect(nextCustomStatuses('new')).toEqual(['cancelled']);
+    expect(nextCustomStatuses('quoted')).toEqual(['deposit_pending', 'in_progress', 'cancelled']);
+    expect(nextCustomStatuses('in_progress')).toEqual(['ready', 'cancelled']);
+    expect(nextCustomStatuses('ready')).toEqual(['delivered']);
+    expect(nextCustomStatuses('delivered')).toEqual([]);
+    expect(nextCustomStatuses('cancelled')).toEqual([]);
+    expect(Object.keys(CUSTOM_STATUS_LABEL)).toHaveLength(7);
+  });
+  it('التسعير والإلغاء ضمن الحالات الصحيحة', () => {
+    expect(canRequote('new') && canRequote('quoted') && !canRequote('in_progress')).toBe(true);
+    expect(customerCanCancelCustom('quoted') && !customerCanCancelCustom('in_progress')).toBe(true);
+  });
+  it('نوع الصورة من المحتوى: JPG/PNG/WebP فقط', () => {
+    expect(sniffImageExt(Uint8Array.from([0xff, 0xd8, 0xff, 0xe0, 0]))).toBe('jpg');
+    expect(sniffImageExt(Uint8Array.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0]))).toBe('png');
+    expect(sniffImageExt(Uint8Array.from([0x52, 0x49, 0x46, 0x46, 1, 2, 3, 4, 0x57, 0x45, 0x42, 0x50]))).toBe('webp');
+  });
+  it('يرفض SVG وHTML وPDF وأي محتوى آخر حتى لو كان الاسم صورة', () => {
+    const enc = (s: string) => new TextEncoder().encode(s);
+    expect(sniffImageExt(enc('<svg xmlns="http://www.w3.org/2000/svg"></svg>'))).toBeNull();
+    expect(sniffImageExt(enc('<html><script>alert(1)</script>'))).toBeNull();
+    expect(sniffImageExt(enc('%PDF-1.7'))).toBeNull();
+    expect(sniffImageExt(new Uint8Array(0))).toBeNull();
+    expect(sniffImageExt(Uint8Array.from([0x52, 0x49, 0x46, 0x46, 1, 2, 3, 4, 0x57, 0x41, 0x56, 0x45]))).toBeNull();   // WAV لا WebP
+  });
+  it('رسائل الأخطاء بالعربية', () => {
+    expect(customErrorMessage('too_many_requests')).toMatch(/كثيرة/);
+    expect(customErrorMessage('???')).toMatch(/حاول مرة أخرى/);
   });
 });

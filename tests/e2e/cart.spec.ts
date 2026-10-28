@@ -64,7 +64,8 @@ test.describe('السلة', () => {
 });
 
 test.describe('حماية مسارات الطلب', () => {
-  for (const path of ['/checkout', '/orders/aaaaaaaa-0000-0000-0000-000000000001', '/dashboard/orders', '/dashboard/orders/aaaaaaaa-0000-0000-0000-000000000001']) {
+  for (const path of ['/checkout', '/orders/aaaaaaaa-0000-0000-0000-000000000001', '/dashboard/orders', '/dashboard/orders/aaaaaaaa-0000-0000-0000-000000000001',
+    '/custom-order', '/custom-orders/aaaaaaaa-0000-0000-0000-000000000001', '/dashboard/custom-orders', '/dashboard/custom-orders/aaaaaaaa-0000-0000-0000-000000000001']) {
     test(`${path} بلا جلسة يحوّل إلى الدخول`, async ({ page }) => {
       await page.goto(path);
       await expect(page).toHaveURL(/\/login/);
