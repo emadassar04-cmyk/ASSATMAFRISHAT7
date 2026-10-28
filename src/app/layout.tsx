@@ -6,7 +6,7 @@ import '@/styles/globals.css';
 
 // الخطان المسموحان في الـ PRD؛ يُختار أحدهما من إعدادات الثيم
 const tajawal = Tajawal({ subsets: ['arabic'], weight: ['400', '500', '700'], display: 'swap', variable: '--font-tajawal' });
-const plex = IBM_Plex_Sans_Arabic({ subsets: ['arabic'], weight: ['400', '500', '700'], display: 'swap', variable: '--font-plex' });
+const plex = IBM_Plex_Sans_Arabic({ subsets: ['arabic'], weight: ['400', '500', '700'], display: 'swap', preload: false, variable: '--font-plex' });
 
 export const revalidate = 60;
 
