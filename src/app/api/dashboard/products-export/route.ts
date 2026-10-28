@@ -11,8 +11,17 @@ export async function GET(req: Request) {
   const { data: me } = await supabase.from('profiles').select('role, is_active').eq('id', user.id).single();
   if (!me?.is_active || !['moderator', 'admin'].includes(me.role)) return new NextResponse('Forbidden', { status: 403 });
 
-  const [{ data: products }, { data: branches }, { data: ovs }, { data: ots }] = await Promise.all([
-    supabase.from('products').select('slug, name, description, base_price, is_visible, is_featured, categories(name), product_variants(sku, price, compare_at_price, variant_options(value_id), branch_stock(branch_id, quantity, status))').order('created_at'),
+  // الصفحات بحجم 1000 (حد PostgREST) حتى لا يُقتطع التصدير بصمت
+  const products: unknown[] = [];
+  for (let from = 0; ; from += 1000) {
+    const { data, error } = await supabase.from('products')
+      .select('slug, name, description, base_price, is_visible, is_featured, categories(name), product_variants(sku, price, compare_at_price, variant_options(value_id), branch_stock(branch_id, quantity, status))')
+      .order('created_at').order('id').range(from, from + 999);
+    if (error) return new NextResponse('Export failed', { status: 500 });
+    products.push(...(data ?? []));
+    if ((data?.length ?? 0) < 1000) break;
+  }
+  const [{ data: branches }, { data: ovs }, { data: ots }] = await Promise.all([
     supabase.from('branches').select('id, slug').order('sort_order'),
     supabase.from('option_values').select('id, value, type_id'),
     supabase.from('option_types').select('id, name'),
@@ -25,7 +34,7 @@ export async function GET(req: Request) {
   const rows: string[][] = [header];
   type V = { sku: string | null; price: number; compare_at_price: number | null; variant_options: { value_id: string }[]; branch_stock: { branch_id: string; quantity: number; status: string }[] };
   type P = { slug: string; name: string; description: string | null; base_price: number; is_visible: boolean; is_featured: boolean; categories: { name: string } | null; product_variants: V[] };
-  for (const p of (products ?? []) as unknown as P[]) {
+  for (const p of products as P[]) {
     const base = [p.slug, p.name, p.categories?.name ?? '', p.description ?? '', String(p.base_price), p.is_visible ? '1' : '0', p.is_featured ? '1' : '0'];
     const vs: (V | null)[] = p.product_variants.length ? p.product_variants : [null];
     for (const v of vs) {

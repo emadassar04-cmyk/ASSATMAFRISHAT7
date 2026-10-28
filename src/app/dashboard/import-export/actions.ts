@@ -2,7 +2,7 @@
 import ExcelJS from 'exceljs';
 import { requireStaff } from '@/lib/auth';
 import { slugify } from '@/lib/format';
-import { parseBool, parseCsv, parseOptions, parseStock, rowsToRecords, STOCK_PREFIX, type ImportRecord } from '@/lib/importExport';
+import { matchVariant, parseBool, parseCsv, parseOptions, parseStock, rowsToRecords, STOCK_PREFIX, type ImportRecord } from '@/lib/importExport';
 import { refreshStorefront } from '../actions-util';
 
 export interface ImportReport { ok: boolean; message?: string; created: number; updated: number; variants: number; errors: { row: number; message: string }[] }
@@ -116,10 +116,9 @@ export async function importProducts(_prev: ImportReport, formData: FormData): P
             const { data } = await supabase.from('product_variants').select('id, product_id').eq('sku', r.sku).maybeSingle();
             if (data && data.product_id !== pid) throw new Error(`SKU ${r.sku} مستخدم لمنتج آخر`);
             vid = data?.id;
-          } else if (optIds.length) {
+          } else {
             const { data } = await supabase.from('product_variants').select('id, variant_options(value_id)').eq('product_id', pid);
-            vid = (data ?? []).find((v: { id: string; variant_options: { value_id: string }[] }) =>
-              v.variant_options.length === optIds.length && optIds.every((o) => v.variant_options.some((x) => x.value_id === o)))?.id;
+            vid = matchVariant((data ?? []) as { id: string; variant_options: { value_id: string }[] }[], optIds);
           }
           if (vid) {
             const { error } = await supabase.from('product_variants').update(vrow).eq('id', vid);

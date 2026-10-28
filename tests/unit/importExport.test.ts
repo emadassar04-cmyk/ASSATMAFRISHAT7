@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { formatOptions, parseBool, parseCsv, parseOptions, parseStock, rowsToRecords, toCsv, unguard } from '@/lib/importExport';
+import { formatOptions, matchVariant, parseBool, parseCsv, parseOptions, parseStock, rowsToRecords, toCsv, unguard } from '@/lib/importExport';
 import { slugify, waLink, tgLink } from '@/lib/format';
 import { themeToCss } from '@/lib/settings';
 
@@ -53,4 +53,16 @@ describe('format', () => {
   it('themeToCss يرفض القيم الخطرة', () => {
     expect(themeToCss({ colors: { primary: '#112233', bg: 'red;}body{display:none' } })).toBe(':root{--primary:#112233}');
   });
+});
+
+describe('matchVariant (منع تكرار الخيارات عند إعادة الاستيراد)', () => {
+  const vs = [
+    { id: 'default', variant_options: [] },
+    { id: 'red', variant_options: [{ value_id: 'c1' }] },
+    { id: 'red-big', variant_options: [{ value_id: 'c1' }, { value_id: 's2' }] },
+  ];
+  it('الخيار الافتراضي (بلا خصائص) يطابق الموجود', () => expect(matchVariant(vs, [])).toBe('default'));
+  it('يطابق مجموعة الخصائص مهما كان ترتيبها', () => expect(matchVariant(vs, ['s2', 'c1'])).toBe('red-big'));
+  it('لا يطابق مجموعة جزئية', () => expect(matchVariant(vs, ['s2'])).toBeUndefined());
+  it('بلا خيارات قائمة يعيد undefined', () => expect(matchVariant([], [])).toBeUndefined());
 });

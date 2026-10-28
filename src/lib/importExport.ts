@@ -50,6 +50,17 @@ export function parseOptions(s: string): [string, string][] {
 }
 export const formatOptions = (o: [string, string][]) => o.map(([t, v]) => `${t}=${v}`).join(';');
 
+/**
+ * يجد الخيار (Variant) المطابق لمجموعة قيم الخصائص — بما فيها المجموعة الفارغة (الخيار الافتراضي).
+ * هذا ما يمنع تكرار الخيارات عند إعادة استيراد ملف مُصدَّر (Round-trip).
+ */
+export function matchVariant(
+  variants: { id: string; variant_options: { value_id: string }[] }[], optIds: string[],
+): string | undefined {
+  const want = new Set(optIds);
+  return variants.find((v) => v.variant_options.length === want.size && v.variant_options.every((x) => want.has(x.value_id)))?.id;
+}
+
 export type ImportRecord = Record<string, string>;
 
 /** يحوّل مصفوفة الصفوف (الصف الأول رؤوس) إلى سجلات */
