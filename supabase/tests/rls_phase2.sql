@@ -1,5 +1,7 @@
 -- اختبارات المرحلة 2: الطلبات والدفع والتوصيل والتدقيق والـ Outbox.
 -- تُشغَّل داخل معاملة وتُلغى (rollback) فلا تترك أثراً. الناتج: passed / failed / أسماء الفاشل (يجب failed = 0).
+-- التشغيل: psql أو Supabase MCP execute_sql (جلسة واحدة). لا تشغّلها في SQL Editor بالمتصفح: لا يُبقي الجداول المؤقتة بين الأوامر.
+-- النتيجة المسجّلة: 116/116 ناجحة + فحوصات منع تعديل/حذف/تفريغ audit_log (7/7) على مشروع التطوير.
 begin;
 
 create temp table _t (name text, ok boolean);   grant all on _t to public;
