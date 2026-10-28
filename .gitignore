@@ -28,3 +28,5 @@ n8n/**/credentials*.json
 npm-debug.log*
 .idea/
 .vscode/
+test-results/
+playwright-report/
