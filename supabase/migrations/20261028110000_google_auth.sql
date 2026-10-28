@@ -23,6 +23,3 @@ begin
     on conflict (profile_id) do nothing;
   return new;
 end $$;
-
--- لا حاجة لرموز OTP بعد الآن
-drop table if exists public.otp_requests;
