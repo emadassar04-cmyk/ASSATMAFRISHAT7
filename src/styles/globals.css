@@ -1,0 +1,71 @@
+@import 'tailwindcss';
+
+/* ===== Design Tokens: المصدر الوحيد للتصميم =====
+   القيم الافتراضية هنا، وتُستبدل وقت التشغيل من إعدادات الثيم (settings.theme)
+   عبر <style> يُحقن في الـ layout. لتغيير التصميم لاحقاً عدّل هذا الملف أو الإعدادات فقط. */
+:root {
+  --bg: #faf7f2;
+  --surface: #ffffff;
+  --fg: #2b211a;
+  --muted: #7a6a5c;
+  --primary: #6b4226;
+  --primary-fg: #ffffff;
+  --accent: #c9a24b;
+  --border: #e8dfd2;
+  --danger: #b3261e;
+  --ok: #2e7d32;
+  --radius: 0.75rem;
+  --shadow-card: 0 1px 2px rgb(0 0 0 / 0.05), 0 4px 12px rgb(0 0 0 / 0.04);
+  --space-section: 3rem;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-fg: var(--fg);
+  --color-muted: var(--muted);
+  --color-primary: var(--primary);
+  --color-primary-fg: var(--primary-fg);
+  --color-accent: var(--accent);
+  --color-border: var(--border);
+  --color-danger: var(--danger);
+  --color-ok: var(--ok);
+  --radius-card: var(--radius);
+  --shadow-card: var(--shadow-card);
+  --font-sans: var(--font-main), system-ui, -apple-system, 'Segoe UI', Tahoma, sans-serif;
+}
+
+html { scroll-behavior: smooth; }
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ===== مكوّنات أساسية خفيفة ===== */
+@layer components {
+  .container-page { @apply mx-auto w-full max-w-6xl px-4; }
+  .card { @apply rounded-card border border-border bg-surface shadow-card; }
+  .btn {
+    @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-card border border-transparent px-4 py-2
+      text-sm font-medium transition-colors duration-150 disabled:opacity-50 disabled:pointer-events-none;
+  }
+  .btn-primary { @apply bg-primary text-primary-fg hover:opacity-90; }
+  .btn-accent { @apply bg-accent text-fg hover:opacity-90; }
+  .btn-outline { @apply border-border bg-surface text-fg hover:border-primary hover:text-primary; }
+  .btn-danger { @apply bg-danger text-white hover:opacity-90; }
+  .btn-sm { @apply min-h-9 px-3 py-1 text-xs; }
+  .input {
+    @apply min-h-11 w-full rounded-card border border-border bg-surface px-3 py-2 text-sm text-fg
+      placeholder:text-muted focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20;
+  }
+  .label { @apply mb-1 block text-xs font-medium text-muted; }
+  .badge { @apply inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium; }
+  .h-section { @apply mb-4 text-xl font-bold; }
+}
+
+/* حركات خفيفة فقط، وتُلغى لمن يفضّل تقليلها */
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; animation: none !important; scroll-behavior: auto !important; }
+}

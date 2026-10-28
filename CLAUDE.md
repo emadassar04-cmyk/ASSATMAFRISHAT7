@@ -35,12 +35,13 @@ npm run dev            # تشغيل محلي
 npm run lint           # فحص الكود
 npm run typecheck      # tsc --noEmit
 npm run test           # اختبارات الوحدة (Vitest)
-npm run test:e2e       # اختبارات E2E (Playwright)
+npm run test:e2e       # اختبارات E2E (Playwright) — لم تُضف بعد (تحتاج شبكة إلى Supabase)
 npm run build          # بناء الإنتاج
-supabase db reset      # إعادة بناء DB محلياً من migrations + seed
+supabase db reset      # إعادة بناء DB محلياً من migrations + seed (يتطلب Supabase CLI)
 supabase migration new <name>   # migration جديد
 ```
-اختبارات RLS: ملفات pgTAP في `supabase/tests/` (`supabase test db`).
+اختبارات RLS: `supabase/tests/rls_phase1.sql` (SQL داخل معاملة تُلغى؛ تُشغَّل بـ psql أو Supabase MCP `execute_sql`، والمطلوب `failed = 0`). تُضاف ملفات المرحلة التالية بنفس النمط.
+في بيئة السحابة قد تُحظر `*.supabase.co` من الـ shell؛ في هذه الحالة استخدم Supabase MCP لتشغيل SQL.
 
 ## مراجع التوثيق
 `docs/PRD.md` · `docs/architecture.md` · `docs/schema.md` · `docs/n8n-workflows.md` · `docs/ai-agent-prompt.md` · `docs/whatsapp-templates.md` · `docs/roadmap.md` · `docs/deployment.md` (يُنشأ في المرحلة 1)
