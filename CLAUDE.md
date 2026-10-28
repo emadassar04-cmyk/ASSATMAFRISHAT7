@@ -40,7 +40,7 @@ npm run build          # بناء الإنتاج
 supabase db reset      # إعادة بناء DB محلياً من migrations + seed (يتطلب Supabase CLI)
 supabase migration new <name>   # migration جديد
 ```
-اختبارات RLS: `supabase/tests/rls_phase1.sql` و`rls_phase2*.sql` (SQL داخل معاملة تُلغى؛ تُشغَّل بـ psql أو Supabase MCP `execute_sql` بجلسة واحدة، **وليس SQL Editor بالمتصفح**؛ والمطلوب `failed = 0`). تُضاف ملفات المرحلة التالية بنفس النمط.
+اختبارات RLS: `supabase/tests/rls_phase1.sql` و`rls_phase2*.sql`، `rls_phase3_bot.sql` (SQL داخل معاملة تُلغى؛ تُشغَّل بـ psql أو Supabase MCP `execute_sql` بجلسة واحدة، **وليس SQL Editor بالمتصفح**؛ والمطلوب `failed = 0`). تُضاف ملفات المرحلة التالية بنفس النمط.
 اختبارات E2E: `npm run build && npm run test:e2e` (تحتاج `NEXT_PUBLIC_SUPABASE_URL` و`NEXT_PUBLIC_SUPABASE_ANON_KEY`).
 في بيئة السحابة قد تُحظر `*.supabase.co` من الـ shell؛ في هذه الحالة استخدم Supabase MCP لتشغيل SQL.
 
