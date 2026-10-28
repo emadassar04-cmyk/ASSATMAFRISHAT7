@@ -1,0 +1,30 @@
+# الاعتماديات والبناء
+node_modules/
+.next/
+out/
+dist/
+coverage/
+*.tsbuildinfo
+next-env.d.ts
+
+# الأسرار
+.env
+.env.*
+!.env.example
+
+# Supabase المحلي
+supabase/.branches/
+supabase/.temp/
+
+# Vercel
+.vercel/
+
+# n8n: لا تُصدَّر credentials أبداً
+n8n/**/credentials*.json
+
+# نظام وسجلات
+.DS_Store
+*.log
+npm-debug.log*
+.idea/
+.vscode/
