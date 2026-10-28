@@ -10,20 +10,20 @@ const ROLE_LABEL: Record<AppRole, string> = { customer: 'زبون', moderator: '
 export default async function UsersPage({ searchParams }: { searchParams: Promise<SP> }) {
   const sp = await searchParams;
   const { supabase, userId } = await requireAdmin('/dashboard/users');
-  const q = first(sp.q).replace(/[^\d+]/g, '');
+  const q = first(sp.q).trim();
   const role = first(sp.role);
-  let query = supabase.from('profiles').select('id, phone, full_name, role, is_active, branch_id').order('created_at', { ascending: false }).limit(100);
-  if (q) query = query.ilike('phone', `%${q}%`);
+  let query = supabase.from('profiles').select('id, email, full_name, role, is_active, branch_id').order('created_at', { ascending: false }).limit(100);
+  if (q) query = query.ilike('email', `%${q.replace(/[%,]/g, '')}%`);
   if (role in ROLE_LABEL) query = query.eq('role', role);
   const [{ data: users }, { data: branches }] = await Promise.all([query, supabase.from('branches').select('id,name').order('sort_order')]);
-  type U = { id: string; phone: string; full_name: string | null; role: AppRole; is_active: boolean; branch_id: string | null };
+  type U = { id: string; email: string | null; full_name: string | null; role: AppRole; is_active: boolean; branch_id: string | null };
 
   return (
     <>
       <PageHeader title="المستخدمون والصلاحيات" />
       <Flash sp={sp} />
       <form action={addStaff} className="card mb-4 grid gap-2 p-4 sm:grid-cols-[1fr_1fr_auto_auto]">
-        <Field label="جوال الموظف"><input name="phone" dir="ltr" placeholder="05XXXXXXXX" className="input" required /></Field>
+        <Field label="Gmail الموظف"><input name="email" type="email" dir="ltr" placeholder="name@gmail.com" className="input" required /></Field>
         <Field label="الاسم"><input name="full_name" className="input" /></Field>
         <Field label="الدور">
           <select name="role" className="input"><option value="moderator">مشرف صفحات</option><option value="admin">إداري</option><option value="auditor">مشرف متابعة</option></select>
@@ -31,7 +31,7 @@ export default async function UsersPage({ searchParams }: { searchParams: Promis
         <div className="flex items-end"><button className="btn btn-primary w-full">+ إضافة</button></div>
       </form>
       <form className="card mb-4 grid gap-2 p-3 sm:grid-cols-[1fr_auto_auto]">
-        <input name="q" defaultValue={q} dir="ltr" placeholder="بحث بالجوال" className="input" aria-label="بحث" />
+        <input name="q" defaultValue={q} dir="ltr" placeholder="بحث بالبريد" className="input" aria-label="بحث" />
         <select name="role" defaultValue={role} className="input" aria-label="الدور">
           <option value="">كل الأدوار</option>{Object.entries(ROLE_LABEL).map(([k, l]) => <option key={k} value={k}>{l}</option>)}
         </select>
@@ -41,7 +41,7 @@ export default async function UsersPage({ searchParams }: { searchParams: Promis
         {((users ?? []) as U[]).map((u) => (
           <details key={u.id} className="card p-3">
             <summary className="flex cursor-pointer flex-wrap items-center justify-between gap-2 text-sm">
-              <span><bdi>{u.phone}</bdi> {u.full_name && `— ${u.full_name}`}</span>
+              <span><bdi>{u.email}</bdi> {u.full_name && `— ${u.full_name}`}</span>
               <span className="flex gap-1">
                 <span className="badge bg-primary/10 text-primary">{ROLE_LABEL[u.role]}</span>
                 {!u.is_active && <span className="badge bg-danger/10 text-danger">موقوف</span>}

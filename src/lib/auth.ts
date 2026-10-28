@@ -6,7 +6,7 @@ import type { AppRole } from '@/types';
 export interface AuthCtx {
   supabase: Awaited<ReturnType<typeof createClient>>;
   userId: string;
-  profile: { id: string; phone: string; full_name: string | null; role: AppRole; branch_id: string | null };
+  profile: { id: string; email: string | null; full_name: string | null; role: AppRole; branch_id: string | null };
 }
 
 /**
@@ -19,7 +19,7 @@ export async function requireRole(roles: AppRole[], nextPath = '/dashboard'): Pr
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect(`/login?next=${encodeURIComponent(nextPath)}`);
   const { data: profile } = await supabase.from('profiles')
-    .select('id, phone, full_name, role, branch_id, is_active').eq('id', user.id).single();
+    .select('id, email, full_name, role, branch_id, is_active').eq('id', user.id).single();
   if (!profile || !profile.is_active || !roles.includes(profile.role)) redirect('/');
   if (profile.role === 'admin' || profile.role === 'auditor') {
     const { data: aal } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();

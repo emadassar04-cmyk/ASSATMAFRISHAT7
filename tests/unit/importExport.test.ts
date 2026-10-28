@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest';
 import { formatOptions, parseBool, parseCsv, parseOptions, parseStock, rowsToRecords, toCsv, unguard } from '@/lib/importExport';
-import { normalizePhone } from '@/lib/phone';
 import { slugify, waLink, tgLink } from '@/lib/format';
 import { themeToCss } from '@/lib/settings';
 
@@ -39,12 +38,6 @@ describe('options/stock', () => {
     expect(r.records[0].name).toBe('كنب');
     expect(rowsToRecords([['x'], ['1']]).missing).toEqual(['name']);
   });
-});
-
-describe('phone', () => {
-  it.each([['0599123456', '+970599123456'], ['599123456', '+970599123456'], ['+970599123456', '+970599123456'],
-    ['00972599123456', '+970599123456'], ['059-912 3456', '+970599123456']])('%s', (i, o) => expect(normalizePhone(i)).toBe(o));
-  it.each(['0123', 'abc', '0699123456', ''])('يرفض %s', (i) => expect(normalizePhone(i)).toBeNull());
 });
 
 describe('format', () => {

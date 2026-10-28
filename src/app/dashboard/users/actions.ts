@@ -1,7 +1,6 @@
 'use server';
 import { requireAdmin } from '@/lib/auth';
 import { createAdminClient } from '@/lib/supabase/admin';
-import { normalizePhone } from '@/lib/phone';
 import { bool, go, isUuid, str, strOrNull } from '../actions-util';
 
 const BACK = '/dashboard/users';
@@ -21,22 +20,22 @@ export async function updateUser(formData: FormData) {
   go(BACK, { ok: 'تم تحديث المستخدم' });
 }
 
-/** إضافة موظف برقم جواله: يُنشأ حسابه ويدخل لاحقاً بـ OTP */
+/** إضافة موظف ببريد Gmail: يُنشأ حسابه ويدخل لاحقاً عبر Google (يرتبط الحساب بنفس البريد) */
 export async function addStaff(formData: FormData) {
   await requireAdmin(BACK);
-  const phone = normalizePhone(str(formData, 'phone'));
+  const email = str(formData, 'email').toLowerCase();
   const role = str(formData, 'role');
-  if (!phone || !['moderator', 'admin', 'auditor'].includes(role)) go(BACK, { error: 'رقم أو دور غير صالح' });
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || !['moderator', 'admin', 'auditor'].includes(role)) go(BACK, { error: 'بريد أو دور غير صالح' });
   const admin = createAdminClient();
-  let { data: p } = await admin.from('profiles').select('id').eq('phone', phone).maybeSingle();
+  let { data: p } = await admin.from('profiles').select('id').eq('email', email).maybeSingle();
   if (!p) {
     const { error } = await admin.auth.admin.createUser({
-      email: `${phone.replace(/\D/g, '')}@phone.alassar.local`, email_confirm: true, user_metadata: { phone },
+      email, email_confirm: true,
     });
     if (error) go(BACK, { error: 'تعذّر إنشاء الحساب' });
-    p = (await admin.from('profiles').select('id').eq('phone', phone).single()).data;
+    p = (await admin.from('profiles').select('id').eq('email', email).single()).data;
   }
   const { error } = await admin.from('profiles').update({ role, full_name: strOrNull(formData, 'full_name'), is_active: true }).eq('id', p!.id);
   if (error) go(BACK, { error: 'تعذّر تعيين الدور' });
-  go(BACK, { ok: 'تمت إضافة المستخدم. يدخل برقمه عبر رمز التحقق.' });
+  go(BACK, { ok: 'تمت إضافة المستخدم. يدخل بحساب Google بنفس البريد.' });
 }

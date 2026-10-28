@@ -2,7 +2,7 @@ import 'server-only';
 import { createClient } from '@supabase/supabase-js';
 
 /**
- * عميل service_role: يتجاوز RLS. للخادم فقط وللعمليات الموثوقة (OTP، إنشاء مستخدم).
+ * عميل service_role: يتجاوز RLS. للخادم فقط وللعمليات الموثوقة (إنشاء مستخدم).
  * ممنوع استيراده في أي Client Component (server-only يمنع ذلك عند البناء).
  */
 export function createAdminClient() {

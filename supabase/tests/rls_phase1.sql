@@ -51,7 +51,7 @@ insert into public.branch_stock (variant_id, branch_id, quantity, low_threshold)
 
 -- ===== triggers =====
 select pg_temp.chk('handle_new_user ينشئ profile بدور customer', (select role = 'customer' from public.profiles where id='aaaaaaaa-0000-0000-0000-000000000001'));
-select pg_temp.chk('handle_new_user ينشئ customer مرتبط بالجوال', exists (select 1 from public.customers where phone='+970590000001' and profile_id='aaaaaaaa-0000-0000-0000-000000000001'));
+select pg_temp.chk('handle_new_user ينشئ customer مرتبط بالحساب', exists (select 1 from public.customers where profile_id='aaaaaaaa-0000-0000-0000-000000000001'));
 select pg_temp.chk('حالة المخزون limited عند كمية <= العتبة', (select status = 'limited' from public.branch_stock where branch_id='eeeeeeee-0000-0000-0000-000000000001'));
 update public.branch_stock set quantity = 0 where branch_id='eeeeeeee-0000-0000-0000-000000000001';
 select pg_temp.chk('حالة المخزون out_of_stock عند 0', (select status = 'out_of_stock' from public.branch_stock where branch_id='eeeeeeee-0000-0000-0000-000000000001'));
@@ -68,7 +68,6 @@ select pg_temp.chk('anon: لا يرى branch_stock', (select count(*) from publi
 select pg_temp.chk('anon: لا يرى payment_methods', (select count(*) from public.payment_methods) = 0);
 select pg_temp.chk('anon: لا يرى profiles', (select count(*) from public.profiles) = 0);
 select pg_temp.chk('anon: لا يرى customers', (select count(*) from public.customers) = 0);
-select pg_temp.chk('anon: لا يرى otp_requests', pg_temp.denied('select 1 from public.otp_requests') or (select count(*) from public.otp_requests) = 0);
 select pg_temp.chk('anon: لا يكتب في products', pg_temp.denied($$insert into public.products (slug,name,base_price) values ('x','x',1)$$));
 select pg_temp.chk('anon: لا يكتب في settings', pg_temp.denied($$update public.settings set value='{}' where key='t.public'$$));
 select pg_temp.chk('anon: RPC التوفر تعيد الحالة', (select count(*) from public.get_product_availability('cccccccc-0000-0000-0000-000000000001')) = 1);
@@ -119,7 +118,7 @@ select pg_temp.act_as('aaaaaaaa-0000-0000-0000-000000000003', 'aal2');
 select pg_temp.chk('admin aal2: يقرأ الإعدادات الخاصة', (select count(*) from public.settings where key='t.private') = 1);
 select pg_temp.chk('admin aal2: يعدّل الإعدادات', not pg_temp.denied($$update public.settings set value='{"a":3}' where key='t.private'$$));
 select pg_temp.chk('admin aal2: ينشئ قسماً', not pg_temp.denied($$insert into public.categories (slug,name) values ('t-adm2','x')$$));
-select pg_temp.chk('admin aal2: يرى كل الملفات', (select count(*) from public.profiles where phone like '+97059000000%') = 4);
+select pg_temp.chk('admin aal2: يرى كل الملفات', (select count(*) from public.profiles where email like 't-%@x.local') = 4);
 select pg_temp.chk('admin aal2: يرقّي مستخدماً عبر RPC', not pg_temp.denied($$select public.admin_update_profile('aaaaaaaa-0000-0000-0000-000000000001','moderator',true,null,'اسم')$$));
 select pg_temp.chk('admin aal2: لا ينزل صلاحياته', pg_temp.denied($$select public.admin_update_profile('aaaaaaaa-0000-0000-0000-000000000003','customer',true,null,null)$$));
 select pg_temp.chk('admin aal2: لا يوقف نفسه', pg_temp.denied($$select public.admin_update_profile('aaaaaaaa-0000-0000-0000-000000000003','admin',false,null,null)$$));
