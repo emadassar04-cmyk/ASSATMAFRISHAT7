@@ -118,3 +118,26 @@ test.describe('الحماية', () => {
     expect(loc).not.toContain('evil.com');
   });
 });
+
+test.describe('PWA', () => {
+  test('manifest صالح للتثبيت', async ({ request }) => {
+    const mf = await (await request.get('/manifest.webmanifest')).json();
+    expect(mf.display).toMatch(/standalone|fullscreen|minimal-ui/);
+    expect(mf.start_url).toBeTruthy();
+    const sizes = (mf.icons ?? []).map((i: { sizes: string }) => i.sizes);
+    expect(sizes).toEqual(expect.arrayContaining(['192x192', '512x512']));
+  });
+
+  test('يعمل بلا اتصال: الصفحات المخزّنة وصفحة /offline', async ({ page, context }) => {
+    await page.goto('/');
+    await page.evaluate(async () => { await navigator.serviceWorker.ready; });
+    await page.goto('/products'); // يُخزَّن في الكاش
+    await page.reload();
+    await context.setOffline(true);
+    await page.goto('/products');
+    await expect(page.getByRole('heading', { name: /المنتجات/ }).first()).toBeVisible();
+    await page.goto('/about-غير-مخزنة-أبداً').catch(() => {});
+    await expect(page.locator('body')).toContainText(/اتصال|offline|إنترنت/i);
+    await context.setOffline(false);
+  });
+});
