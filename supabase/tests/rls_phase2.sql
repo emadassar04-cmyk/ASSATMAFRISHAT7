@@ -158,7 +158,7 @@ select pg_temp.chk('A لا يكتب في orders مباشرة (insert)', pg_temp.
 select pg_temp.chk('A لا يعدّل السعر مباشرة', pg_temp.denied($$update public.orders set total = 1 where id = pg_temp.c('o1')$$));
 select pg_temp.chk('A لا يغيّر الحالة مباشرة', pg_temp.denied($$update public.orders set status = 'confirmed' where id = pg_temp.c('o1')$$));
 select pg_temp.chk('A لا يحذف طلباً', pg_temp.denied($$delete from public.orders where id = pg_temp.c('o1')$$));
-select pg_temp.chk('A لا يكتب في order_items', pg_temp.denied($$update public.order_items set unit_price = 1$$));
+select pg_temp.chk('A لا يكتب في order_items', pg_temp.denied($$update public.order_items set unit_price = 1 where order_id = pg_temp.c('o1')$$));
 select pg_temp.chk('A لا ينشئ payment مباشرة', pg_temp.denied($$insert into public.payments (order_id, method_id, amount, status) values (pg_temp.c('o1'), pg_temp.c('pm1'), 1, 'confirmed')$$));
 select pg_temp.chk('A لا يقرأ audit_log', pg_temp.denied($$select 1 from public.audit_log$$));
 select pg_temp.chk('A لا يقرأ outbox', (select count(*) = 0 from public.outbox_events));
@@ -276,19 +276,19 @@ select pg_temp.chk('auditor: لا يرى الطلبات', (select count(*) = 0 f
 select pg_temp.chk('auditor: لا يرى الدفعات', (select count(*) = 0 from public.payments));
 select pg_temp.chk('auditor: لا يكتب في السجل', pg_temp.denied($$insert into public.audit_log (entity_type, action) values ('x','y')$$));
 select pg_temp.chk('auditor: لا يستدعي set_order_status', pg_temp.err_is($$select public.set_order_status(pg_temp.c('o1'), 'cancelled', 'x')$$, '%not_allowed%'));
-select pg_temp.chk('auditor: لا يعدّل منتجاً', pg_temp.denied($$update public.products set name = 'x'$$));
+select pg_temp.chk('auditor: لا يعدّل منتجاً', pg_temp.denied($$update public.products set name = 'x' where slug = 't-p1'$$));
 reset role;
 select pg_temp.act_as('aaaaaaaa-0000-0000-0000-000000000005', 'aal1');
 select pg_temp.chk('auditor بدون 2FA: لا يقرأ السجل', (select count(*) = 0 from public.audit_log));
 reset role;
 
 -- ===== السجل Append-Only حتى من أعلى صلاحية =====
-select pg_temp.chk('postgres: لا يعدّل السجل', pg_temp.err_is($$update public.audit_log set action = 'x'$$, '%append-only%'));
-select pg_temp.chk('postgres: لا يحذف من السجل', pg_temp.err_is($$delete from public.audit_log$$, '%append-only%'));
+select pg_temp.chk('postgres: لا يعدّل السجل', pg_temp.err_is($$update public.audit_log set action = 'x' where id is not null$$, '%append-only%'));
+select pg_temp.chk('postgres: لا يحذف من السجل', pg_temp.err_is($$delete from public.audit_log where id is not null$$, '%append-only%'));
 select pg_temp.chk('postgres: لا يفرّغ السجل', pg_temp.err_is($$truncate public.audit_log$$, '%append-only%'));
 set local role service_role;
-select pg_temp.chk('service_role: لا يعدّل السجل', pg_temp.denied($$update public.audit_log set action = 'x'$$));
-select pg_temp.chk('service_role: لا يحذف من السجل', pg_temp.denied($$delete from public.audit_log$$));
+select pg_temp.chk('service_role: لا يعدّل السجل', pg_temp.denied($$update public.audit_log set action = 'x' where id is not null$$));
+select pg_temp.chk('service_role: لا يحذف من السجل', pg_temp.denied($$delete from public.audit_log where id is not null$$));
 select pg_temp.chk('service_role: لا يكتب في السجل', pg_temp.denied($$insert into public.audit_log (entity_type, action) values ('x','y')$$));
 select pg_temp.chk('service_role: يقرأ السجل', (select count(*) > 0 from public.audit_log));
 reset role;
@@ -297,7 +297,7 @@ reset role;
 update public.outbox_events set status = 'failed', last_error = 'x' where id = (select id from public.outbox_events order by created_at limit 1);
 select pg_temp.act_as('aaaaaaaa-0000-0000-0000-000000000004', 'aal2');
 select pg_temp.chk('admin: يرى outbox المتعثّر فقط', (select count(*) = 1 from public.outbox_events) and (select bool_and(status in ('failed','dead')) from public.outbox_events));
-select pg_temp.chk('admin: لا يكتب في outbox مباشرة', pg_temp.denied($$update public.outbox_events set status = 'sent'$$));
+select pg_temp.chk('admin: لا يكتب في outbox مباشرة', pg_temp.denied($$update public.outbox_events set status = 'sent' where id is not null$$));
 reset role;
 select pg_temp.chk('مفتاح idempotency فريد (لا تكرار)', (select count(*) = count(distinct idempotency_key) from public.outbox_events));
 
